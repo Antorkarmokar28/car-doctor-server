@@ -38,25 +38,46 @@ async function run() {
             const options = {
                 // Include only the `title` and `imdb` fields in the returned document
                 projection: {
-                    service_id: 1, title: 1, img:1, description: 1, price: 1
+                    service_id: 1, title: 1, img: 1, description: 1, price: 1,
                 },
             };
             const result = await servicesCollection.findOne(query, options);
             res.send(result);
         })
-        app.post('/bookings', async(req, res) => {
+        app.post('/bookings', async (req, res) => {
             const booking = req.body;
             console.log(booking)
             const result = await bookingsCollection.insertOne(booking);
             res.send(result)
         })
-        app.get('/bookings', async(req, res) => {
+        app.get('/bookings', async (req, res) => {
             let query = {}
-            if(req.query?.email){
-                query = {email : req.query.email}
+            if (req.query?.email) {
+                query = { email: req.query.email }
             }
             const result = await bookingsCollection.find(query).toArray();
             res.send(result)
+        })
+        // update the bookings items from mongo db database
+        app.patch('/bookings/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const updateBookings = req.body;
+            console.log(updateBookings);
+            const updateDoc = {
+                $set: {
+                    status: updateBookings.status
+                },
+            };
+            const result = await bookingsCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
+        // delete bookings items from mongodb database
+        app.delete('/bookings/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await bookingsCollection.deleteOne(query);
+            res.send(result);
         })
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
